@@ -1,8 +1,18 @@
-.board-square {
+.square-dark,
+.square-light {
   height: 80px;
   width: 80px;
   border: 1px solid black;
   display: flex;
   justify-content: center;
   align-items: center;
+  color: white;
+}
+
+.square-dark {
+  background-color: darkslategrey;
+}
+
+.square-light {
+  background-color: lightslategrey;
 }

@@ -1,3 +1,4 @@
 @import-normalize;
 @import './board.css';
 @import './square.css';
+@import './piece.css';
