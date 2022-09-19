@@ -1,7 +1,7 @@
 import React from 'react';
 import Piece from './Piece';
 
-export default function Square({ name, className, piece }) {
+export default function Square({ className, piece }) {
 
   return (
     <div className={className}>

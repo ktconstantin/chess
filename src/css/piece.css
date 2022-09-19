@@ -1,7 +1,12 @@
+.piece {
+  height: 80%;
+  width: 80%;
+}
+
 .piece--black,
 .piece--white {
-  height: 60px;
-  width: 60px;
+  height: 100%;
+  width: 100%;
 }
 
 .piece--black {

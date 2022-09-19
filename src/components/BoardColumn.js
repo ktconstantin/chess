@@ -8,7 +8,6 @@ export default function BoardColumn({ squares }) {
       {[...squares].reverse().map((square, index) => (
         <Square 
           key={index}
-          name={`${square.file}${square.rank}`}
           className={square.className}
           piece={square.piece}
         />
