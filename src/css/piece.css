@@ -1,4 +1,17 @@
-.piece {
-  height: 40px;
-  width: 40px;
+.piece--black,
+.piece--white {
+  height: 60px;
+  width: 60px;
+}
+
+.piece--black {
+  fill: black;
+  stroke: lightslategrey;
+  stroke-width: 10px;
+}
+
+.piece--white {
+  fill: white;
+  stroke: darkslategrey;
+  stroke-width: 10px;
 }

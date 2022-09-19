@@ -1,67 +1,45 @@
 import React from 'react';
-import blackPawn from '../assets/black-pawn.png';
-import whitePawn from '../assets/white-pawn.png';
-import blackBishop from '../assets/black-bishop.png';
-import whiteBishop from '../assets/white-bishop.png';
-import blackKnight from '../assets/black-knight.png';
-import whiteKnight from '../assets/white-knight.png';
-import blackRook from '../assets/black-rook.png';
-import whiteRook from '../assets/white-rook.png';
-import blackQueen from '../assets/black-queen.png';
-import whiteQueen from '../assets/white-queen.png';
-import blackKing from '../assets/black-king.png';
-import whiteKing from '../assets/white-king.png';
+
+import { 
+  GiChessPawn, 
+  GiChessRook, 
+  GiChessKnight, 
+  GiChessBishop, 
+  GiChessQueen, 
+  GiChessKing 
+} from "react-icons/gi";
 
 export default function Piece({ color, type }) {
-  const name = `${color} ${type}`;
+  
+  let className;
+  if (color === 'black') className = 'piece--black';
+  if (color === 'white') className = 'piece--white';
+  
   let icon;
-
-  switch (name) {
-    case 'black pawn':
-      icon = blackPawn;
+  switch (type) {
+    case 'pawn':
+      icon = <GiChessPawn className={className} />
       break;
-    case 'white pawn':
-      icon = whitePawn;
+    case 'rook':
+      icon = <GiChessRook className={className} />
       break;
-    case 'black bishop':
-      icon = blackBishop;
+    case 'bishop':
+      icon = <GiChessBishop className={className} />
       break;
-    case 'white bishop':
-      icon = whiteBishop;
+    case 'knight':
+      icon = <GiChessKnight className={className} />
       break;
-    case 'black knight':
-      icon = blackKnight;
+    case 'queen':
+      icon = <GiChessQueen className={className} />
       break;
-    case 'white knight':
-      icon = whiteKnight;
-      break;
-    case 'black rook':
-      icon = blackRook;
-      break;
-    case 'white rook':
-      icon = whiteRook;
-      break;
-    case 'black queen':
-      icon = blackQueen;
-      break;
-    case 'white queen':
-      icon = whiteQueen;
-      break;
-    case 'black king':
-      icon = blackKing;
-      break;
-    case 'white king':
-      icon = whiteKing;
+    case 'king':
+      icon = <GiChessKing className={className} />
       break;
   }
 
   return (
-    
-    <img 
-      className="piece"
-      src={icon} 
-      alt={name}
-    />    
-    
+    <div className="piece" >
+      {icon}
+    </div>
   )
 }

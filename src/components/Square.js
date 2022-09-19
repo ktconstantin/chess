@@ -5,7 +5,6 @@ export default function Square({ name, className, piece }) {
 
   return (
     <div className={className}>
-      <div>{name}</div>
       
       <Piece 
         color={piece.color}
