@@ -38,8 +38,8 @@ export default function Piece({ color, type }) {
   }
 
   return (
-    <div className="piece" >
+    <>
       {icon}
-    </div>
+    </>
   )
 }

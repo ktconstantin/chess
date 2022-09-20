@@ -1,11 +1,14 @@
 import React from 'react';
 import Piece from './Piece';
 
-export default function Square({ className, piece }) {
+export default function Square({ id, fileIndex, rankIndex, className, piece }) {
 
   return (
-    <div className={className}>
+    <div 
+      className={className}
       
+    >
+      {id}
       <Piece 
         color={piece.color}
         type={piece.type}

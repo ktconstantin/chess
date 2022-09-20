@@ -1,6 +1,6 @@
 .board-column {
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   width: 10%;
   height: 100%;
   margin: 0;
