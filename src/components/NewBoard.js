@@ -107,6 +107,7 @@ export default function NewBoard() {
   const [ sideToMove, setSideToMove ] = useState('white');
   const [ halfmoveClock, setHalfmoveClock ] = useState(0);
   const [ fullmoveCounter, setFullmoveCounter ] = useState(0);
+  const [ capturedPieces, setCapturedPieces ] = useState([]);
 
   function getPawnMovesFrom(file, rank, color, hasMoved) {
     const moves = [];
@@ -126,7 +127,14 @@ export default function NewBoard() {
       }
 
       // check for captures
-      const [se, sw] = [board[file + 1][rank - 1] , board[file - 1][rank - 1]]
+      let [se, sw] = Array(2).fill(undefined);
+      if (file <= 6 && rank >= 1) {
+        se = board[file + 1][rank - 1];
+      }
+      if (file >= 1 && rank >= 1) {
+        sw = board[file - 1][rank - 1];
+      }
+      
       const diagonals = [se, sw];
       
       diagonals.forEach(square => {
@@ -153,7 +161,15 @@ export default function NewBoard() {
       }
 
       // check for captures
-      const [nw, ne] = [board[file - 1][rank + 1] , board[file + 1][rank + 1]]
+      let [nw, ne] = Array(2).fill(undefined);
+
+      if (file >= 1 && rank <= 6) {
+        nw = board[file - 1][rank + 1];
+      }
+      if (file <= 6 && rank <= 6) {
+        ne = board[file + 1][rank + 1];
+      }
+      
       const diagonals = [ne, nw];
       
       diagonals.forEach(square => {
@@ -169,35 +185,193 @@ export default function NewBoard() {
   }
 
   function getKingMovesFrom(file, rank, color, hasMoved) {
-    const moves = [];
+    let moves = [];
+    let north, northEast, east, southEast, south, southWest, west, northWest;
 
-    const [n, ne, e, se, s, sw, w, nw] = [
-      board[file][rank + 1],
-      board[file + 1][rank + 1],
-      board[file + 1][rank],
-      board[file + 1][rank - 1],
-      board[file][rank - 1],
-      board[file - 1][rank - 1],
-      board[file - 1][rank],
-      board[file - 1][rank + 1],
-    ];
+    if (rank < 7) {
+      north = board[file][rank + 1];
+      moves.push(north);
+    }
 
-    const allDirections = [n, ne, e, se, s, sw, w, nw];
+    if (file < 7 && rank < 7) {
+      northEast = board[file + 1][rank + 1];
+      moves.push(northEast);
+    }
 
-    allDirections.forEach(square => {
-      if (square !== undefined && (square.isEmpty() || square.piece.color !== color)) {
-        moves.push(square);
-      }
-    });
+    if (file < 7) {
+      east = board[file + 1][rank];
+      moves.push(east);
+    }
+
+    if (file < 7 && rank > 0) {
+      southEast = board[file + 1][rank - 1];
+      moves.push(southEast);
+    }
+
+    if (rank > 0) {
+      south = board[file][rank - 1];
+      moves.push(south);
+    }
+
+    if (file > 0 && rank > 0) {
+      southWest = board[file - 1][rank - 1];
+      moves.push(southWest);
+    }
+
+    if (file > 0) {
+      west = board[file - 1][rank];
+      moves.push(west);
+    }
+
+    if (file > 0 && rank < 7) {
+      northWest = board[file - 1][rank + 1];
+      moves.push(northWest);
+    }
+
+    moves = moves.filter(square => square !== undefined);
+    moves = moves.filter(square => square.isEmpty() || square.piece.color !== color);
 
     return moves;
   }
 
-  function getNEMovesFrom(file, rank, color) {
+  function getNorthMovesFrom(file, rank, color) {
+    let currentRankIndex = rank;
+    const moves = [];
+
+    let north;
+
+    if (currentRankIndex < 7) {
+      north = board[file][currentRankIndex + 1];
+    }
+
+    while (north !== undefined) {
+      if (north.isEmpty()) { // move
+        moves.push(north);
+      } else if (north.piece.color !== color) { // capture
+        moves.push(north);
+        break;
+      } else if (north.piece.color === color) { // has your piece
+        break;
+      }
+
+      currentRankIndex = north.rankIndex;
+
+      if (currentRankIndex === 7) {
+        north = undefined;
+      } else {
+        north = board[file][currentRankIndex + 1];
+      }
+    }
+
+    return moves;
+  }
+
+  function getSouthMovesFrom(file, rank, color) {
+    let currentRankIndex = rank;
+    const moves = [];
+
+    let south;
+    
+    if (currentRankIndex > 0) {
+      south = board[file][currentRankIndex - 1];
+    }
+
+    while (south !== undefined) {
+      if (south.isEmpty()) { // move
+        moves.push(south);
+      } else if (south.piece.color !== color) { // capture
+        moves.push(south);
+        break;
+      } else if (south.piece.color === color) { // has your piece
+        break;
+      }
+
+      currentRankIndex = south.rankIndex;
+
+      if (currentRankIndex === 0) {
+        south = undefined;
+      } else {
+        south = board[file][currentRankIndex - 1];
+      }
+    }
+
+    return moves;
+  }
+
+  function getEastMovesFrom(file, rank, color) {
+    let currentFileIndex = file;
+    const moves = [];
+
+    let east;
+
+    if (currentFileIndex < 7) {
+      east = board[currentFileIndex + 1][rank];
+    }
+
+    while (east !== undefined) {
+      if (east.isEmpty()) { // move
+        moves.push(east);
+      } else if (east.piece.color !== color) { // capture
+        moves.push(east);
+        break;
+      } else if (east.piece.color === color) { // has your piece
+        break;
+      }
+
+      currentFileIndex = east.fileIndex;
+
+      if (currentFileIndex === 7) {
+        east = undefined;
+      } else {
+        east = board[currentFileIndex + 1][rank];
+      }
+    }
+
+    return moves;
+  }
+
+  function getWestMovesFrom(file, rank, color) {
+    let currentFileIndex = file;
+    const moves = [];
+
+    let west;
+    
+    if (currentFileIndex > 0) {
+      west = board[currentFileIndex - 1][rank];
+    }
+
+    while (west !== undefined) {
+      if (west.isEmpty()) { // move
+        moves.push(west);
+      } else if (west.piece.color !== color) { // capture
+        moves.push(west);
+        break;
+      } else if (west.piece.color === color) { // has your piece
+        break;
+      }
+
+      currentFileIndex = west.fileIndex;
+
+      if (currentFileIndex === 0) {
+        west = undefined;
+      } else {
+        west = board[currentFileIndex - 1][rank];
+      }
+    }
+
+    return moves;
+  }
+
+  function getNorthEastMovesFrom(file, rank, color) {
     let currentFileIndex = file;
     let currentRankIndex = rank;
     const moves = [];
-    let northEast = board[currentFileIndex + 1][currentRankIndex + 1];
+
+    let northEast;
+
+    if (currentFileIndex < 7 && currentRankIndex < 7) {
+      northEast = board[currentFileIndex + 1][currentRankIndex + 1];
+    }
 
     while (northEast !== undefined) {
       if (northEast.isEmpty()) { // move
@@ -222,11 +396,16 @@ export default function NewBoard() {
     return moves;
   }
 
-  function getSEMovesFrom(file, rank, color) {
+  function getSouthEastMovesFrom(file, rank, color) {
     let currentFileIndex = file;
     let currentRankIndex = rank;
     const moves = [];
-    let southEast = board[currentFileIndex + 1][currentRankIndex - 1];
+
+    let southEast;
+
+    if (currentFileIndex < 7 && currentRankIndex > 0) {
+      southEast = board[currentFileIndex + 1][currentRankIndex - 1];
+    }
 
     while (southEast !== undefined) {
       if (southEast.isEmpty()) { // move
@@ -251,11 +430,15 @@ export default function NewBoard() {
     return moves;
   }
 
-  function getSWMovesFrom(file, rank, color) {
+  function getSouthWestMovesFrom(file, rank, color) {
     let currentFileIndex = file;
     let currentRankIndex = rank;
     const moves = [];
-    let southWest = board[currentFileIndex - 1][currentRankIndex - 1];
+
+    let southWest;
+    if (currentFileIndex > 0 && currentRankIndex > 0) {
+      southWest = board[currentFileIndex - 1][currentRankIndex - 1];
+    }
 
     while (southWest !== undefined) {
       if (southWest.isEmpty()) { // move
@@ -280,11 +463,16 @@ export default function NewBoard() {
     return moves;
   }
 
-  function getNWMovesFrom(file, rank, color) {
+  function getNorthWestMovesFrom(file, rank, color) {
     let currentFileIndex = file;
     let currentRankIndex = rank;
     const moves = [];
-    let northWest = board[currentFileIndex - 1][currentRankIndex + 1];
+
+    let northWest;
+
+    if (currentFileIndex > 0 && currentRankIndex < 7) {
+      northWest = board[currentFileIndex - 1][currentRankIndex + 1];
+    }
 
     while (northWest !== undefined) {
       if (northWest.isEmpty()) { // move
@@ -309,29 +497,164 @@ export default function NewBoard() {
     return moves;
   }
 
-  getNWMovesFrom(7, 2, 'black', true);
+  function getBishopMovesFrom(file, rank, color) {
+    let moves = getNorthEastMovesFrom(file, rank, color);
+    moves = moves.concat(getSouthEastMovesFrom(file, rank, color));
+    moves = moves.concat(getSouthWestMovesFrom(file, rank, color));
+    moves = moves.concat(getNorthWestMovesFrom(file, rank, color));
+    
+    return moves;
+  }
+
+  function getRookMovesFrom(file, rank, color, hasMoved) {
+    let moves = getNorthMovesFrom(file, rank, color);
+    moves = moves.concat(getEastMovesFrom(file, rank, color));
+    moves = moves.concat(getSouthMovesFrom(file, rank, color));
+    moves = moves.concat(getWestMovesFrom(file, rank, color));
+
+    return moves;
+  }
+
+  function getKnightMovesFrom(file, rank, color) {
+    let moves = [];
+    let [top, bottom, left, right] = Array(4).fill([]);
+
+    if (rank <= 5) {
+      top = board.map(file => file[rank + 2]).filter(square => {
+        return Math.abs(square.fileIndex - file) === 1;
+      });
+    }
+    
+    if (rank >= 2) {
+      bottom = board.map(file => file[rank - 2]).filter(square => {
+        return Math.abs(square.fileIndex - file) === 1; 
+      });
+    }
+
+    if (file >= 2) {
+      left = board[file - 2].filter(square => {
+        return Math.abs(square.rankIndex - rank) === 1;
+      });
+    }
+
+    if (file <= 5) {
+      right = board[file + 2].filter(square => {
+        return Math.abs(square.rankIndex - rank) === 1;
+      });
+    }
+
+    moves = moves.concat(top);
+    moves = moves.concat(bottom);
+    moves = moves.concat(left);
+    moves = moves.concat(right);
+
+    // filter to valid squares
+    moves = moves.filter(square => {
+      return (square.isEmpty()) || (square.piece.color !== color);
+    });
+
+    return moves;
+  }
+  
+  function getQueenMovesFrom(file, rank, color) {
+    return getRookMovesFrom(file, rank, color).concat(getBishopMovesFrom(file, rank, color));
+  }
+
+  function displayValidMovesFrom(file, rank, color, type, hasMoved) {
+    //const [color, type, hasMoved] = [piece.color, piece.type, piece.hasMoved];
+
+    let moves;
+
+    switch (type) {
+      case 'pawn':
+        moves = getPawnMovesFrom(file, rank, color, hasMoved);
+        break;
+      case 'bishop':
+        moves = getBishopMovesFrom(file, rank, color);
+        break;
+      case 'knight':
+        moves = getKnightMovesFrom(file, rank, color);
+        break;
+      case 'rook':
+        moves = getRookMovesFrom(file, rank, color, hasMoved);
+        break;
+      case 'queen':
+        moves = getQueenMovesFrom(file, rank, color);
+        break;
+      case 'king':
+        moves = getKingMovesFrom(file, rank, color, hasMoved);
+    }
+
+    console.log(moves);
+
+    const newBoard = board.slice();
+
+    moves.forEach(square => {
+      const [fileIndex, rankIndex] = [square.fileIndex, square.rankIndex];
+      const newSquare = newBoard[fileIndex][rankIndex];
+
+      if (newSquare.className === 'square-dark') {
+        newSquare.setClassNameTo('square-dark valid-move');
+      } else if (newSquare.className === 'square-light') {
+        newSquare.setClassNameTo('square-light valid-move');
+      } else if (newSquare.className === 'square-dark valid-move') {
+        newSquare.setClassNameTo('square-dark');
+      } else if (newSquare.className === 'square-light valid-move') {
+        newSquare.setClassNameTo('square-light');
+      }
+    });
+
+    setBoard(newBoard);
+  }
+
+  function changeSideToMove() {
+    if (sideToMove === 'black') {
+      incrementFullmoveCounter(); // increment every black turn
+      setSideToMove('white');
+    } else {
+      setSideToMove('black');
+    }
+  }
+
+  function incrementHalfmoveClock() {
+    setHalfmoveClock(halfmoveClock + 1);
+  }
+
+  function resetHalfmoveClock() {
+    setHalfmoveClock(0);
+  }
+
+  function incrementFullmoveCounter() {
+    setFullmoveCounter(fullmoveCounter + 1);
+  }
+  
   console.log(board);
 
   return (
-    <div className="board">
-      {board.map((file, index) => (
+    <>
+      
+      <div className="board">
+        {board.map((file, index) => (
 
-        <div className="board-column" key={index} >
-          {file.map((square, index) => (
+          <div className="board-column" key={index} >
+            {file.map((square, index) => (
 
-            <Square 
-              key={index}
-              id={square.id}
-              fileIndex={square.fileIndex}
-              rankIndex={square.rankIndex}
-              className={square.className}
-              piece={square.piece}
-            />
+              <Square 
+                key={index}
+                id={square.id}
+                fileIndex={square.fileIndex}
+                rankIndex={square.rankIndex}
+                className={square.className}
+                piece={square.piece}
+                displayValidMovesFrom={displayValidMovesFrom}
+              />
 
-          ))}
-        </div>
+            ))}
+          </div>
 
-      ))}
-    </div>
+        ))}
+      </div>
+    </>
+    
   )
 }

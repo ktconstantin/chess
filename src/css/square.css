@@ -1,5 +1,6 @@
 .square-dark,
-.square-light {
+.square-light,
+.valid-move {
   max-width: 100%;
   min-height: 80px;
   border: 1px solid black;
@@ -15,4 +16,8 @@
 
 .square-light {
   background-color: lightsteelblue;
+}
+
+.valid-move {
+  background-color: lightgreen;
 }
