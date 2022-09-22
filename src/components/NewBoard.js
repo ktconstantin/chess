@@ -39,8 +39,10 @@ export default function NewBoard() {
       validMove,
 
       setPieceTo(piece) {
-        if (piece.color === undefined || piece.type === undefined) {
-          throw new Error('invalid piece');
+        if (piece !== '') {
+          if (piece.color === undefined || piece.type === undefined) {
+            throw new Error('invalid piece');
+          }
         }
 
         this.piece = piece;
@@ -132,8 +134,10 @@ export default function NewBoard() {
   const [ board, setBoard ] = useState(createBoard());
   const [ sideToMove, setSideToMove ] = useState('white');
   const [ halfmoveClock, setHalfmoveClock ] = useState(0);
-  const [ fullmoveCounter, setFullmoveCounter ] = useState(0);
+  const [ fullmoveCounter, setFullmoveCounter ] = useState(1);
   const [ capturedPieces, setCapturedPieces ] = useState([]);
+  const [ squareWithPieceToMove, setSquareWithPieceToMove ] = useState({});
+  const [ moves, setMoves ] = useState([]);
 
   function getPawnMovesFrom(file, rank, color, hasMoved) {
     const moves = [];
@@ -613,6 +617,7 @@ export default function NewBoard() {
   function changeSideToMove() {
     if (sideToMove === 'black') {
       setSideToMove('white');
+      incrementFullmoveCounter();
     } else {
       setSideToMove('black');
     }
@@ -630,37 +635,28 @@ export default function NewBoard() {
     setFullmoveCounter(fullmoveCounter + 1);
   }
 
-  function removePieceFromBoard(file, rank) {
-    // shallow copy the board and captured pieces arrays
+  function movePiece(fromFile, fromRank, toFile, toRank) {
     const newBoard = board.slice();
     const newCapturedPieces = capturedPieces.slice();
 
-    // move piece to captured pieces list
-    const capturedPiece = newBoard[file][rank].piece;
-    newCapturedPieces.push(capturedPiece);
+    const pieceToMove = squareWithPieceToMove.piece;
+    squareWithPieceToMove.setPieceTo('');
+    pieceToMove.changeHasMovedStatus();
+
+    if (!newBoard[toFile][toRank].isEmpty()) {
+      // capture
+      const capturedPiece = newBoard[toFile][toRank].piece;
+      newCapturedPieces.push(capturedPiece);
+    }
+
+    newBoard[toFile][toRank].setPieceTo(pieceToMove);
+
+    moves.forEach(square => {
+      square.toggleValidMove();
+      square.toggleValidMoveDisplay();
+    });
+
     setCapturedPieces(newCapturedPieces);
-
-    // reset square to empty, update board
-    newBoard[file][rank].setPieceTo('');
-    setBoard(newBoard);
-  }
-
-  function movePiece(fromFile, fromRank, toFile, toRank) {
-    const newBoard = board.slice();
-    const piece = newBoard[fromFile][fromRank];
-
-    removePieceFromBoard(fromFile, fromRank);
-
-    piece.changeHasMovedStatus();
-    newBoard[toFile][toRank].setPieceTo(piece);
-    setBoard(newBoard);
-  }
-
-  function addPieceToBoard(color, type, file, rank) {
-    const piece = createPiece(color, type);
-    const newBoard = board.slice();
-
-    newBoard[file][rank].setPieceTo(piece);
     setBoard(newBoard);
   }
 
@@ -670,22 +666,34 @@ export default function NewBoard() {
 
     const square = board[file][rank];
     const piece = square.piece;
-    const [color, type, hasMoved] = [piece.color, piece.type, piece.hasMoved];
+    const [newColor, newType, newHasMoved] = [piece.color, piece.type, piece.hasMoved];
 
-    let moves = [];
-    if (!square.isEmpty() && sideToMove === color) {
-      moves = getMoves(type, file, rank, color, hasMoved);
+    // check for new moves based on click
+    let newMoves = [];
+    
+    if (!square.isEmpty() && sideToMove === newColor) {
+      // option 1: your own piece => toggle valid moves display
+      console.log('option 1');
+      newMoves = getMoves(newType, file, rank, newColor, newHasMoved);
+      handleOwnPieceClick(newMoves);
+      
+    } else if (moves.includes(square) && square.validMove === true) {
+      // option 2: valid move square => handle piece move
+      console.log('option 2');
+      const [fromFile, fromRank] = [squareWithPieceToMove.file, squareWithPieceToMove.rank];
+
+      movePiece(fromFile, fromRank, file, rank);
+
+      changeSideToMove();
+
+    } else {
+      console.log('option 3');
+      return; // option 3: not a valid move square
     }
 
-    // option 1: your own piece => toggle valid moves display
-    if (!square.isEmpty() && piece.isOwn()) {
-      handleOwnPieceClick(moves);
-    } else if (moves.includes(square) && square.validMove === true) {
-
-      // option 2: valid move square => handle piece move
-      // TODO
-    } else {
-      return; // option 3: not a valid move square
+    if (square !== squareWithPieceToMove) {
+      setMoves(newMoves);
+      setSquareWithPieceToMove(square);
     }
   }
 
@@ -719,7 +727,11 @@ export default function NewBoard() {
 
   return (
     <>
-      
+      <div className="info">
+        <div>{`${sideToMove}'s turn`}</div>
+        <div>{`Halfmove Clock: ${halfmoveClock}`}</div>
+        <div>{`Fullmove Counter: ${fullmoveCounter}`}</div>
+      </div>
       <div className="board">
         {board.map((file, index) => (
 

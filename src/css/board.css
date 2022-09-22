@@ -1,3 +1,8 @@
 .board {
   display: flex;
 }
+
+.info {
+  display: flex;
+  flex-direction: column;
+}
