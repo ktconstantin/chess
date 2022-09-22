@@ -9,7 +9,7 @@ import {
   GiChessKing 
 } from "react-icons/gi";
 
-export default function Piece({ color, type, hasMoved, fileIndex, rankIndex,  displayValidMovesFrom}) {
+export default function Piece({ color, type, hasMoved, fileIndex, rankIndex}) {
   
   let className;
   if (color === 'black') className = 'piece--black';
@@ -39,7 +39,6 @@ export default function Piece({ color, type, hasMoved, fileIndex, rankIndex,  di
 
   return (
     <div
-      onClick={() => displayValidMovesFrom(fileIndex, rankIndex, color, type, hasMoved)}
       className="piece"
     >
       {icon}

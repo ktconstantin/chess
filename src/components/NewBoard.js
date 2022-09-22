@@ -29,24 +29,46 @@ export default function NewBoard() {
     return squares;
   }
 
-  function createSquare(id, fileIndex, rankIndex, className, piece = '') {
+  function createSquare(id, fileIndex, rankIndex, className, piece = '', validMove = false) {
     return {
       id,
       fileIndex,
       rankIndex,
       className,
       piece,
+      validMove,
 
       setPieceTo(piece) {
+        if (piece.color === undefined || piece.type === undefined) {
+          throw new Error('invalid piece');
+        }
+
         this.piece = piece;
       },
 
       setClassNameTo(className) {
+        if (typeof className !== 'string') throw new Error('must pass a string');
         this.className = className;
       },
 
       isEmpty() {
         return this.piece === '';
+      },
+
+      toggleValidMove() {
+        this.validMove ? this.validMove = false : this.validMove = true;
+      },
+
+      toggleValidMoveDisplay() {
+        if (this.className === 'square-dark') {
+          this.setClassNameTo('square-dark valid-move');
+        } else if (this.className === 'square-light') {
+          this.setClassNameTo('square-light valid-move');
+        } else if (this.className === 'square-dark valid-move') {
+          this.setClassNameTo('square-dark');
+        } else if (this.className === 'square-light valid-move') {
+          this.setClassNameTo('square-light');
+        }
       },
     }
   }
@@ -59,6 +81,10 @@ export default function NewBoard() {
 
       changeHasMovedStatus() {
         this.hasMoved = true;
+      },
+
+      isOwn() {
+        return sideToMove === this.color;
       }
     }
   }
@@ -114,14 +140,19 @@ export default function NewBoard() {
 
     if (color === 'black') {
       // check for forward moves to empty squares
-      const oneForward = board[file][rank - 1];
-      if (oneForward.isEmpty()) {
+      let oneForward;
+
+      if (rank > 0) {
+        oneForward = board[file][rank - 1];
+      }
+      
+      if (oneForward !== undefined && oneForward.isEmpty()) {
         moves.push(oneForward);
 
         if (rank === 1) console.log('can promote');
       }
 
-      if (oneForward.isEmpty() && !hasMoved) {
+      if (oneForward !== undefined && oneForward.isEmpty() && !hasMoved) {
         const twoForward = board[file][rank - 2];
         if (twoForward.isEmpty()) moves.push(twoForward);
       }
@@ -148,14 +179,19 @@ export default function NewBoard() {
 
     if (color === 'white') {
       // check for forward moves to empty squares
-      const oneForward = board[file][rank + 1];
-      if (oneForward.isEmpty()) {
+      let oneForward;
+
+      if (rank < 7) {
+        oneForward = oneForward = board[file][rank + 1];
+      }
+      
+      if (oneForward !== undefined && oneForward.isEmpty()) {
         moves.push(oneForward);
 
         if (rank === 6) console.log('can promote');
       }
 
-      if (oneForward.isEmpty() && !hasMoved) {
+      if (oneForward !== undefined && oneForward.isEmpty() && !hasMoved) {
         const twoForward = board[file][rank + 2];
         if (twoForward.isEmpty()) moves.push(twoForward);
       }
@@ -560,9 +596,100 @@ export default function NewBoard() {
     return getRookMovesFrom(file, rank, color).concat(getBishopMovesFrom(file, rank, color));
   }
 
-  function displayValidMovesFrom(file, rank, color, type, hasMoved) {
-    //const [color, type, hasMoved] = [piece.color, piece.type, piece.hasMoved];
+  function handleOwnPieceClick(moves) {
+    const newBoard = board.slice();
 
+    moves.forEach(square => {
+      const [fileIndex, rankIndex] = [square.fileIndex, square.rankIndex];
+      const newSquare = newBoard[fileIndex][rankIndex];
+
+      newSquare.toggleValidMoveDisplay(); // toggle CSS className
+      newSquare.toggleValidMove(); // toggle valid move status of square
+    });
+
+    setBoard(newBoard);
+  }
+
+  function changeSideToMove() {
+    if (sideToMove === 'black') {
+      setSideToMove('white');
+    } else {
+      setSideToMove('black');
+    }
+  }
+
+  function incrementHalfmoveClock() {
+    setHalfmoveClock(halfmoveClock + 1);
+  }
+
+  function resetHalfmoveClock() {
+    setHalfmoveClock(0);
+  }
+
+  function incrementFullmoveCounter() {
+    setFullmoveCounter(fullmoveCounter + 1);
+  }
+
+  function removePieceFromBoard(file, rank) {
+    // shallow copy the board and captured pieces arrays
+    const newBoard = board.slice();
+    const newCapturedPieces = capturedPieces.slice();
+
+    // move piece to captured pieces list
+    const capturedPiece = newBoard[file][rank].piece;
+    newCapturedPieces.push(capturedPiece);
+    setCapturedPieces(newCapturedPieces);
+
+    // reset square to empty, update board
+    newBoard[file][rank].setPieceTo('');
+    setBoard(newBoard);
+  }
+
+  function movePiece(fromFile, fromRank, toFile, toRank) {
+    const newBoard = board.slice();
+    const piece = newBoard[fromFile][fromRank];
+
+    removePieceFromBoard(fromFile, fromRank);
+
+    piece.changeHasMovedStatus();
+    newBoard[toFile][toRank].setPieceTo(piece);
+    setBoard(newBoard);
+  }
+
+  function addPieceToBoard(color, type, file, rank) {
+    const piece = createPiece(color, type);
+    const newBoard = board.slice();
+
+    newBoard[file][rank].setPieceTo(piece);
+    setBoard(newBoard);
+  }
+
+  function handleSquareClick(file, rank) {
+    const ID = `${FILES[file]}${RANKS[rank]}`;
+    console.log(`clicked on ${ID}`);
+
+    const square = board[file][rank];
+    const piece = square.piece;
+    const [color, type, hasMoved] = [piece.color, piece.type, piece.hasMoved];
+
+    let moves = [];
+    if (!square.isEmpty() && sideToMove === color) {
+      moves = getMoves(type, file, rank, color, hasMoved);
+    }
+
+    // option 1: your own piece => toggle valid moves display
+    if (!square.isEmpty() && piece.isOwn()) {
+      handleOwnPieceClick(moves);
+    } else if (moves.includes(square) && square.validMove === true) {
+
+      // option 2: valid move square => handle piece move
+      // TODO
+    } else {
+      return; // option 3: not a valid move square
+    }
+  }
+
+  function getMoves(type, file, rank, color, hasMoved) {
     let moves;
 
     switch (type) {
@@ -585,49 +712,9 @@ export default function NewBoard() {
         moves = getKingMovesFrom(file, rank, color, hasMoved);
     }
 
-    console.log(moves);
-
-    const newBoard = board.slice();
-
-    moves.forEach(square => {
-      const [fileIndex, rankIndex] = [square.fileIndex, square.rankIndex];
-      const newSquare = newBoard[fileIndex][rankIndex];
-
-      if (newSquare.className === 'square-dark') {
-        newSquare.setClassNameTo('square-dark valid-move');
-      } else if (newSquare.className === 'square-light') {
-        newSquare.setClassNameTo('square-light valid-move');
-      } else if (newSquare.className === 'square-dark valid-move') {
-        newSquare.setClassNameTo('square-dark');
-      } else if (newSquare.className === 'square-light valid-move') {
-        newSquare.setClassNameTo('square-light');
-      }
-    });
-
-    setBoard(newBoard);
+    return moves;
   }
 
-  function changeSideToMove() {
-    if (sideToMove === 'black') {
-      incrementFullmoveCounter(); // increment every black turn
-      setSideToMove('white');
-    } else {
-      setSideToMove('black');
-    }
-  }
-
-  function incrementHalfmoveClock() {
-    setHalfmoveClock(halfmoveClock + 1);
-  }
-
-  function resetHalfmoveClock() {
-    setHalfmoveClock(0);
-  }
-
-  function incrementFullmoveCounter() {
-    setFullmoveCounter(fullmoveCounter + 1);
-  }
-  
   console.log(board);
 
   return (
@@ -646,7 +733,7 @@ export default function NewBoard() {
                 rankIndex={square.rankIndex}
                 className={square.className}
                 piece={square.piece}
-                displayValidMovesFrom={displayValidMovesFrom}
+                handleSquareClick={handleSquareClick}
               />
 
             ))}
