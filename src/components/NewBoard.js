@@ -723,6 +723,15 @@ export default function NewBoard() {
     return moves;
   }
 
+  function promotePawn(file, rank) {
+    const newBoard = board.slice();
+    const newCapturedPieces = capturedPieces.slice();
+
+    if (newBoard[file][rank.piece === '']) {
+      throw new Error('no piece here');
+    }
+  }
+
   console.log(board);
 
   return (
